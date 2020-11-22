@@ -36,8 +36,8 @@ maxLetterHeight = int(DISPLAYHEIGHT/2)
 frame_Duration = TOTALDURATION / TOTALFRAMES
 
 # not sure:
-for i,line in enumerate(displayTextList):
-    displayTextList[i] = list(line)
+# for i,line in enumerate(displayTextList):
+#     displayTextList[i] = list(line)
 # for line in displayTextList:
 #     line.reverse()
 
@@ -45,9 +45,7 @@ print(displayTextList)
 
 # INITIALIZE VARIABLES
 xOffset = 0
-yOffset = SCREENHEIGHT - FONTSIZE
-# xOffset = MARGINS
-# yOffset = SCREENHEIGHT - MARGINS
+yOffset = MARGINS
 # accumulatedWidth = 0
 accumulatedHeight = [0] * charsInLine # acc height per column
 
@@ -67,9 +65,8 @@ def getVariableSettings(row, col, accumulatedWidth):
             currentwidth = minLetterWidth
             variableWdth = fontMinWidth
         else :
-            # variableWdth decided regarding letters before
+            # variableWdth regards letters before
             currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
-            # currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
             currentwidth = randint(minLetterWidth, int(currentmaxwidth))
             variableWdth = mapWidthToFont(currentwidth)
             if (col==charsInLine-1):
@@ -77,9 +74,8 @@ def getVariableSettings(row, col, accumulatedWidth):
                 variableWdth = mapWidthToFont(currentwidth)
                 # print (accumulatedWidth, currentwidth, currentwidth+currentlinewidth)
 
-
-    variableHght = 100
     # TODO
+    variableHght = 100
     # variableHght = randint(fontMinHeight, fontMaxHeight)
     # accumulatedHeight[col] += variableHght
 
@@ -87,7 +83,6 @@ def getVariableSettings(row, col, accumulatedWidth):
     #         "currentwidth", currentwidth,
     #         "variableWdth", variableWdth)
     return variableWdth, variableHght
-
 
 def mapWidthToFont(currentwidth):
     return int(mapValue(currentwidth,
@@ -104,12 +99,10 @@ for frame in range(TOTALFRAMES):
     newPage(SCREENWIDTH, SCREENHEIGHT)
     fill(BACKGROUND_R/255, BACKGROUND_G/255, BACKGROUND_B/255)
     rect(0,0,SCREENWIDTH, SCREENHEIGHT)
-    # test
-    fill(0,0,0) # test
-    rect(MARGINS, MARGINS ,DISPLAYWIDTH, DISPLAYHEIGHT) # test
-    # test
-    # fill(0,0,0) # test
-    # rect(SCREENWIDTH-MARGINS, SCREENHEIGHT-MARGINS ,10, 10) # test
+    fill(None)
+    stroke(0)
+    rect(MARGINS, MARGINS, DISPLAYWIDTH, DISPLAYHEIGHT)
+
 
     frameDuration(frame_Duration)
     for line in range(lines):
@@ -117,11 +110,11 @@ for frame in range(TOTALFRAMES):
         lineTxt = newLine()
         for char in range(charsInLine):
             currentlinewidth = int(textSize(lineTxt)[0])
-            fill(None)
-
-            stroke(50,0,0)
-
-            rect(0, 0 ,currentlinewidth, SCREENHEIGHT)
+            # TEST:
+            # fill(None)
+            # stroke(50,0,0)
+            # rect(0, 0 ,SCREENWIDTH - currentlinewidth, SCREENHEIGHT)
+            # rect(0, 0 ,currentlinewidth, SCREENHEIGHT)
 
             variableWdth, variableHght = getVariableSettings(line, char, currentlinewidth)
             lineTxt.append(
@@ -130,14 +123,7 @@ for frame in range(TOTALFRAMES):
                 fontVariations = dict(wdth = variableWdth, hght = variableHght)
                 )
             print(currentlinewidth)
-            # text("hello",(SCREENWIDTH-currentlinewidth,0))
-            # print(displayTextList[line][char], currentlinewidth)
-        # text(lineTxt, (0, 0))
-        # xOffset += currentlinewidth
         text(lineTxt, (xOffset, yOffset))
-        # fill(0,0,0) # test
-        # rect(0, 0 ,10, 10) # test
-        # text("hello",(0,0))
         # yOffset -= FONTSIZE # TODO
 
 
