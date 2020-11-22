@@ -4,6 +4,7 @@ from drawBot import * # needed for using as python module
 
 # CONSTANTS:
 DISPLAYTEXT = "מטבחים"
+# DISPLAYTEXT = "hello"
 # DISPLAYTEXT = "מטבחים מערכות מבטחים"
 EXCLUDECOLUMN = 4 # todo can we do this in the preprocessing?
 FONTSIZE = 150
@@ -15,8 +16,6 @@ MARGINS = 10
 
 # PRE PROCESSING - TEXT
 displayTextList = DISPLAYTEXT.split(' ')
-for line in displayTextList:
-    print((list(line)))
 lines = len(displayTextList) # The number of lines
 charsInLine = len(displayTextList[0])
 # PRE PROCESSING - FONT
@@ -36,12 +35,20 @@ maxLetterHeight = int(DISPLAYHEIGHT/2)
 
 frame_Duration = TOTALDURATION / TOTALFRAMES
 
+# not sure:
+for i,line in enumerate(displayTextList):
+    displayTextList[i] = list(line)
+# for line in displayTextList:
+#     line.reverse()
+
+print(displayTextList)
+
 # INITIALIZE VARIABLES
 xOffset = 0
 yOffset = SCREENHEIGHT - FONTSIZE
-# xOffset = SCREENWIDTH - MARGINS
+# xOffset = MARGINS
 # yOffset = SCREENHEIGHT - MARGINS
-accumulatedWidth = 0
+# accumulatedWidth = 0
 accumulatedHeight = [0] * charsInLine # acc height per column
 
 def newLine():
@@ -53,35 +60,32 @@ def newLine():
     return t
 
 # print(minLetterWidth, maxLetterWidth, minLetterHeight, maxLetterHeight) # TEST
-def getVariableSettings(row, col): #, currentlinewidth):
-    global accumulatedWidth, accumulatedHeight
+def getVariableSettings(row, col, accumulatedWidth):
+    # global accumulatedWidth, accumulatedHeight
     if (row==0):
         if (col==EXCLUDECOLUMN):
-            # print("EXCLUDECOLUMN")
             currentwidth = minLetterWidth
             variableWdth = fontMinWidth
-        # variableWdth decided regarding letters before
-        currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
-        currentwidth = randint(minLetterWidth, int(currentmaxwidth))
-        variableWdth = mapWidthToFont(currentwidth)
-        if (col==charsInLine-1):
-            # currentwidth = maxLetterWidth
-            currentwidth = DISPLAYWIDTH - accumulatedWidth
-            # currentwidth = DISPLAYWIDTH - currentlinewidth
-            print (currentwidth)
+        else :
+            # variableWdth decided regarding letters before
+            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
+            # currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
+            currentwidth = randint(minLetterWidth, int(currentmaxwidth))
             variableWdth = mapWidthToFont(currentwidth)
+            if (col==charsInLine-1):
+                currentwidth = DISPLAYWIDTH - accumulatedWidth
+                variableWdth = mapWidthToFont(currentwidth)
+                # print (accumulatedWidth, currentwidth, currentwidth+currentlinewidth)
 
-        accumulatedWidth += currentwidth
 
-
-    # variableHght = randint(fontMinHeight, fontMaxHeight)
     variableHght = 100
+    # TODO
+    # variableHght = randint(fontMinHeight, fontMaxHeight)
     # accumulatedHeight[col] += variableHght
 
-    print ("current range", int(currentmaxwidth), minLetterWidth,
-            "currentwidth", currentwidth,
-            "variableWdth", variableWdth,
-            "accumulatedWidth", accumulatedWidth)
+    # print ("current range", int(currentmaxwidth), minLetterWidth,
+    #         "currentwidth", currentwidth,
+    #         "variableWdth", variableWdth)
     return variableWdth, variableHght
 
 
@@ -104,8 +108,8 @@ for frame in range(TOTALFRAMES):
     fill(0,0,0) # test
     rect(MARGINS, MARGINS ,DISPLAYWIDTH, DISPLAYHEIGHT) # test
     # test
-    fill(0,0,0) # test
-    rect(SCREENWIDTH-MARGINS, SCREENHEIGHT-MARGINS ,10, 10) # test
+    # fill(0,0,0) # test
+    # rect(SCREENWIDTH-MARGINS, SCREENHEIGHT-MARGINS ,10, 10) # test
 
     frameDuration(frame_Duration)
     for line in range(lines):
@@ -113,21 +117,27 @@ for frame in range(TOTALFRAMES):
         lineTxt = newLine()
         for char in range(charsInLine):
             currentlinewidth = int(textSize(lineTxt)[0])
-            print(displayTextList[line][char], currentlinewidth)
-            # lineTxt = newLine()
-            variableWdth, variableHght = getVariableSettings(line, char) #, currentlinewidth)
+            fill(None)
+
+            stroke(50,0,0)
+
+            rect(0, 0 ,currentlinewidth, SCREENHEIGHT)
+
+            variableWdth, variableHght = getVariableSettings(line, char, currentlinewidth)
             lineTxt.append(
                 displayTextList[line][char],
                 # create dict to replace original fontVariations - so instead of fontVariations(x)
                 fontVariations = dict(wdth = variableWdth, hght = variableHght)
-                # fontVariations = dict(wdth = variableWdth , hght = variableHght)
                 )
-            # print(lineTxt.fontVariations())
-            # TODO
-            # text_width, text_height = textSize(lineTxt)
-            # print(text_width, text_height)
-            # print(char, displayTextList[line][char])
+            print(currentlinewidth)
+            # text("hello",(SCREENWIDTH-currentlinewidth,0))
+            # print(displayTextList[line][char], currentlinewidth)
+        # text(lineTxt, (0, 0))
+        # xOffset += currentlinewidth
         text(lineTxt, (xOffset, yOffset))
+        # fill(0,0,0) # test
+        # rect(0, 0 ,10, 10) # test
+        # text("hello",(0,0))
         # yOffset -= FONTSIZE # TODO
 
 
