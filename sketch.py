@@ -3,9 +3,9 @@
 from drawBot import * # needed for using as python module
 
 # CONSTANTS:
-DISPLAYTEXT = "מטבחים"
+# DISPLAYTEXT = "מטבחים"
 # DISPLAYTEXT = "hello"
-# DISPLAYTEXT = "מטבחים מערכות מבטחים"
+DISPLAYTEXT = "מטבחים מערכות מבטחים"
 EXCLUDECOLUMN = 4 # todo can we do this in the preprocessing?
 FONTSIZE = 150
 FONT = 'assets/RAG-Marom-GX.ttf'
@@ -25,7 +25,9 @@ fontMaxWidth = listFontVariations()['wdth']['maxValue']
 fontMinHeight = listFontVariations()['hght']['minValue']
 fontMaxHeight = listFontVariations()['hght']['maxValue']
 # PRE PROCESSING - DISPLAY
-DISPLAYWIDTH, DISPLAYHEIGHT = 500, FONTSIZE*lines
+LINEHEIGHT = FONTSIZE*0.8
+DISPLAYWIDTH, DISPLAYHEIGHT = 500, LINEHEIGHT*lines
+# DISPLAYWIDTH, DISPLAYHEIGHT = 500, 125
 SCREENWIDTH = DISPLAYWIDTH + MARGINS*2
 SCREENHEIGHT = DISPLAYHEIGHT + MARGINS*2
 minLetterWidth = int(DISPLAYWIDTH * 0.1)
@@ -41,11 +43,16 @@ frame_Duration = TOTALDURATION / TOTALFRAMES
 # for line in displayTextList:
 #     line.reverse()
 
-print(displayTextList)
+# print(displayTextList)
+
 
 # INITIALIZE VARIABLES
-xOffset = 0
+# xOffset = 0
+# yOffset = MARGINS
+xOffset = SCREENWIDTH - MARGINS
 yOffset = MARGINS
+# variableWdth = minLetterWidth
+# variableHght = minLetterHeight
 # accumulatedWidth = 0
 accumulatedHeight = [0] * charsInLine # acc height per column
 
@@ -55,11 +62,16 @@ def newLine():
     t.font(FONT)
     t.fontSize(FONTSIZE)
     t.openTypeFeatures(ss01=True)
+    t.align('right')
+    t.lineHeight(LINEHEIGHT)
     return t
 
 # print(minLetterWidth, maxLetterWidth, minLetterHeight, maxLetterHeight) # TEST
 def getVariableSettings(row, col, accumulatedWidth):
     # global accumulatedWidth, accumulatedHeight
+    variableWdth = minLetterWidth
+    variableHght = minLetterHeight
+
     if (row==0):
         if (col==EXCLUDECOLUMN):
             currentwidth = minLetterWidth
@@ -75,7 +87,6 @@ def getVariableSettings(row, col, accumulatedWidth):
                 # print (accumulatedWidth, currentwidth, currentwidth+currentlinewidth)
 
     # TODO
-    variableHght = 100
     # variableHght = randint(fontMinHeight, fontMaxHeight)
     # accumulatedHeight[col] += variableHght
 
@@ -102,6 +113,8 @@ for frame in range(TOTALFRAMES):
     fill(None)
     stroke(0)
     rect(MARGINS, MARGINS, DISPLAYWIDTH, DISPLAYHEIGHT)
+    # text("HELLO", (100, 0), align="right")
+
 
 
     frameDuration(frame_Duration)
@@ -110,10 +123,11 @@ for frame in range(TOTALFRAMES):
         lineTxt = newLine()
         for char in range(charsInLine):
             currentlinewidth = int(textSize(lineTxt)[0])
+
             # TEST:
-            # fill(None)
-            # stroke(50,0,0)
-            # rect(0, 0 ,SCREENWIDTH - currentlinewidth, SCREENHEIGHT)
+            fill(None)
+            stroke(50,0,0)
+            rect(MARGINS, yOffset ,xOffset - MARGINS - currentlinewidth, lineTxt.fontLineHeight())
             # rect(0, 0 ,currentlinewidth, SCREENHEIGHT)
 
             variableWdth, variableHght = getVariableSettings(line, char, currentlinewidth)
@@ -122,9 +136,11 @@ for frame in range(TOTALFRAMES):
                 # create dict to replace original fontVariations - so instead of fontVariations(x)
                 fontVariations = dict(wdth = variableWdth, hght = variableHght)
                 )
-            print(currentlinewidth)
-        text(lineTxt, (xOffset, yOffset))
-        # yOffset -= FONTSIZE # TODO
+            # print(currentlinewidth)
+        text(lineTxt, (xOffset, yOffset))#, align="right")
+
+        # TODO according to accumulatedHeight
+        yOffset += lineTxt.fontLineHeight() # TODO
 
 
 # Save the animation as a gif
