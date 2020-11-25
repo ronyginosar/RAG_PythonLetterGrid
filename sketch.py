@@ -4,6 +4,9 @@ from drawBot import * # needed for using as python module
 
 # TODO's:
 # fill line width, mapping problem
+# animate transitions
+# NTH - make input text
+# NTH - interactive with mouse
 
 
 # CONSTANTS:
@@ -21,8 +24,8 @@ MARGINS = 10
 
 # PRE PROCESSING - TEXT
 DISPLAYTEXTLIST = DISPLAYTEXT.split(' ')
-LINES = len(DISPLAYTEXTLIST) # The number of lines
-CHARS_IN_LINE = len(DISPLAYTEXTLIST[0])
+LINES = len(DISPLAYTEXTLIST) # rows
+CHARS_IN_LINE = len(DISPLAYTEXTLIST[0]) # cols
 # PRE PROCESSING - FONT
 font(FONT)
 FONT_MIN_WIDTH = listFontVariations()['wdth']['minValue']
@@ -32,7 +35,6 @@ FONT_MAX_HEIGHT = listFontVariations()['hght']['maxValue']
 # PRE PROCESSING - DISPLAY
 LINEHEIGHT = FONTSIZE*0.7
 DISPLAYWIDTH, DISPLAYHEIGHT = 500, LINEHEIGHT*LINES
-# DISPLAYWIDTH, DISPLAYHEIGHT = 500, 125
 SCREENWIDTH = DISPLAYWIDTH + MARGINS*2
 SCREENHEIGHT = DISPLAYHEIGHT + MARGINS*2
 minLetterWidth = int(DISPLAYWIDTH * 0.1)
@@ -42,14 +44,6 @@ maxLetterHeight = int(DISPLAYHEIGHT*0.8)
 
 FRAME_DURATION = TOTALDURATION / TOTALFRAMES
 
-# not sure:
-# for i,line in enumerate(DISPLAYTEXTLIST):
-#     DISPLAYTEXTLIST[i] = list(line)
-# for line in DISPLAYTEXTLIST:
-#     line.reverse()
-
-# print(DISPLAYTEXTLIST)
-
 # INITIALIZE VARIABLES
 xOffset = SCREENWIDTH - MARGINS # since we align right for hebrew
 yOffset = MARGINS
@@ -57,7 +51,7 @@ accumulatedHeight = [yOffset] * CHARS_IN_LINE # acc height per column
 widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
 
 # HELPER FUNCTIONS
-def newLine():
+def newTxt():
     t = FormattedString()
     t.fill(255,255,255)
     t.font(FONT)
@@ -82,15 +76,12 @@ def mapValue(value, oldmin, oldmax, newmin, newmax):
     return (value - oldmin) / (oldmax - oldmin) * (newmax - newmin) + newmin
 
 # LOGIC CORE FUNCTION
-# print(minLetterWidth, maxLetterWidth, minLetterHeight, maxLetterHeight) # TEST
 def getVariableSettings(row, col): #, accumulatedWidth):
     global accumulatedHeight
     global widthcontainer
-    accumulatedWidth = widthcontainer[col-1] #temp
-
-    variableWdth = minLetterWidth
-    variableHght = minLetterHeight
-
+    accumulatedWidth = widthcontainer[col-1]
+    variableWdth = minLetterWidth # init local
+    variableHght = minLetterHeight # init local
     if (row==0):
         # 1st row in charge of width definition for column
         if (col==EXCLUDECOLUMN):
@@ -101,6 +92,7 @@ def getVariableSettings(row, col): #, accumulatedWidth):
             currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
             currentwidth = randint(minLetterWidth, int(currentmaxwidth))
             variableWdth = mapWidthToFont(currentwidth)
+            # streach last letter width
             if (col==CHARS_IN_LINE-1):
                 currentwidth = DISPLAYWIDTH - accumulatedWidth
                 variableWdth = mapWidthToFont(currentwidth)
@@ -117,6 +109,7 @@ def getVariableSettings(row, col): #, accumulatedWidth):
     variableHght = mapHeightToFont(currentheight)
     # print(currentmaxheight, currentheight, variableHght, accumulatedHeight[col])
 
+    # streach last row height
     if (row==LINES-1):
         currentheight = DISPLAYHEIGHT - accumulatedHeight[col]
         variableHght = mapHeightToFont(currentheight)
@@ -137,11 +130,9 @@ for frame in range(TOTALFRAMES):
     frameDuration(FRAME_DURATION)
     for line in range(LINES):
         xOffset = SCREENWIDTH - MARGINS # init for each line
-        # yOffset = MARGINS
-        # Create a new empty text object and set its properties
-        # lineTxt = newLine()
+
         for char in range(CHARS_IN_LINE):
-            charTxt = newLine()
+            charTxt = newTxt()
             # currentlinewidth = 50
             # currentlinewidth = int(textSize(charTxt)[0])
 
@@ -158,6 +149,9 @@ for frame in range(TOTALFRAMES):
                 )
             # update accumilation
             charWidth , charHeight = textSize(charTxt)
+            # charHeight = charTxt.fontXHeight()
+            # charHeight = charTxt.fontCapHeight()
+            print(int(charWidth) , int(charHeight))
 
             # if (char == CHARS_IN_LINE-1):
             #     print("wanted", DISPLAYWIDTH - currentlinewidth, "got", int(textSize(charTxt)[0])-currentlinewidth) #TEST
@@ -167,8 +161,9 @@ for frame in range(TOTALFRAMES):
             text(charTxt, (xOffset, yOffset))
 
             # update
-            accumulatedHeight[char] += charHeight
-            xOffset -= charWidth
+            # print(accumulatedHeight)
+            accumulatedHeight[char] += int(charHeight)
+            xOffset -= int(charWidth)
 
 
 
