@@ -53,7 +53,7 @@ FRAME_DURATION = TOTALDURATION / TOTALFRAMES
 # INITIALIZE VARIABLES
 xOffset = SCREENWIDTH - MARGINS # since we align right for hebrew
 yOffset = MARGINS
-accumulatedHeight = [yOffset] * CHARS_IN_LINE # acc height per column
+accumulatedHeight = [0] * CHARS_IN_LINE # acc height per column
 widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
 
 # HELPER FUNCTIONS
@@ -83,11 +83,9 @@ def mapValue(value, oldmin, oldmax, newmin, newmax):
 
 # LOGIC CORE FUNCTION
 # print(minLetterWidth, maxLetterWidth, minLetterHeight, maxLetterHeight) # TEST
-def getVariableSettings(row, col): #, accumulatedWidth):
+def getVariableSettings(row, col, accumulatedWidth):
     global accumulatedHeight
     global widthcontainer
-    accumulatedWidth = widthcontainer[col-1] #temp
-
     variableWdth = minLetterWidth
     variableHght = minLetterHeight
 
@@ -112,15 +110,21 @@ def getVariableSettings(row, col): #, accumulatedWidth):
         variableWdth = widthcontainer[col]
 
     # all rows need height settings
-    currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col]), minLetterHeight)
+    currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col])*0.7, minLetterHeight)
+    # currentmaxheight = max((DISPLAYHEIGHT)*0.5, minLetterHeight)
     currentheight = randint(minLetterHeight, int(currentmaxheight))
     variableHght = mapHeightToFont(currentheight)
-    # print(currentmaxheight, currentheight, variableHght, accumulatedHeight[col])
+    accumulatedHeight[col] += currentheight # TODO find right value
+    print(currentmaxheight, currentheight, variableHght, accumulatedHeight[col])
 
-    if (row==LINES-1):
-        currentheight = DISPLAYHEIGHT - accumulatedHeight[col]
-        variableHght = mapHeightToFont(currentheight)
+    # if (row==LINES-1):
+    #     currentheight = DISPLAYHEIGHT - accumulatedHeight[col]
+    #     variableHght = mapHeightToFont(currentheight)
 
+
+    # print ("current range", int(currentmaxwidth), minLetterWidth,
+    #         "currentwidth", currentwidth,
+    #         "variableWdth", variableWdth)
     return variableWdth, variableHght
 
 
@@ -136,40 +140,29 @@ for frame in range(TOTALFRAMES):
     # rect(MARGINS, MARGINS, DISPLAYWIDTH, DISPLAYHEIGHT)  # TEST
     frameDuration(FRAME_DURATION)
     for line in range(LINES):
-        xOffset = SCREENWIDTH - MARGINS # init for each line
-        # yOffset = MARGINS
         # Create a new empty text object and set its properties
-        # lineTxt = newLine()
+        lineTxt = newLine()
         for char in range(CHARS_IN_LINE):
-            charTxt = newLine()
-            # currentlinewidth = 50
-            # currentlinewidth = int(textSize(charTxt)[0])
+            currentlinewidth = int(textSize(lineTxt)[0])
 
             # TEST:
             # fill(None)
             # stroke(50,0,0)
-            # rect(MARGINS, yOffset ,xOffset - MARGINS - currentlinewidth, charTxt.fontLineHeight())
+            # rect(MARGINS, yOffset ,xOffset - MARGINS - currentlinewidth, lineTxt.fontLineHeight())
 
-            variableWdth, variableHght = getVariableSettings(line, char)
-            charTxt.append(
+            variableWdth, variableHght = getVariableSettings(line, char, currentlinewidth)
+            lineTxt.append(
                 DISPLAYTEXTLIST[line][char],
                 # create dict to replace original fontVariations - so instead of fontVariations(x)
                 fontVariations = dict(wdth = variableWdth, hght = variableHght)
                 )
-            # update accumilation
-            charWidth , charHeight = textSize(charTxt)
-
             # if (char == CHARS_IN_LINE-1):
-            #     print("wanted", DISPLAYWIDTH - currentlinewidth, "got", int(textSize(charTxt)[0])-currentlinewidth) #TEST
+            #     print("wanted", DISPLAYWIDTH - currentlinewidth, "got", int(textSize(lineTxt)[0])-currentlinewidth) #TEST
             # print(currentlinewidth)Y
+        text(lineTxt, (xOffset, yOffset))#, align="right")
 
-            yOffset = accumulatedHeight[char]
-            text(charTxt, (xOffset, yOffset))
-
-            # update
-            accumulatedHeight[char] += charHeight
-            xOffset -= charWidth
-
+        # TODO according to accumulatedHeight
+        yOffset += lineTxt.fontLineHeight() # TODO
 
 
 # Save the animation as a gif
