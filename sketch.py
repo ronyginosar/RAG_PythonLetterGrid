@@ -62,49 +62,45 @@ yOffset = MARGINS
 # widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
 
 # HELPER FUNCTIONS
-
-colunmwidths = [0]*CHARS_IN_LINE
+colunmwidths = []
 accumulatedHeight = [0]*CHARS_IN_LINE ## TODO in rowheights
 rowheights = []
 shade = 0
 
 def colDistribution():
-    s = 0
-    for i in range(CHARS_IN_LINE):
-        r = randint(FONT_MIN_WIDTH, FONT_MAX_WIDTH)
-        # r = randint(minLetterWidth, maxLetterWidth)
-        s += r
-        colunmwidths[i] = r
-    w = DISPLAYWIDTH
-    scale = w/s
-    for i in range(CHARS_IN_LINE):
-        # temp = colunmwidths[i]*scale
-        colunmwidths[i] *= scale
-        colunmwidths[i] = int(colunmwidths[i])
-    # fix last
-    remainder = w - sum(colunmwidths)
-    colunmwidths[0] += remainder
-
+    global colunmwidths
+    widths = randomDistribution(FONT_MIN_WIDTH, FONT_MAX_WIDTH,
+                                 CHARS_IN_LINE, DISPLAYWIDTH)
+    colunmwidths = widths
     return
 
 def rowDistribution():
-    s = 0
-    heights = [0]*LINES
-    for i in range(LINES):
-        r = randint(FONT_MIN_HEIGHT, FONT_MAX_HEIGHT)
-        s += r
-        heights[i] = r
-    h = DISPLAYHEIGHT
-    scale = h/s
-    for i in range(LINES):
-        heights[i] *= scale
-        heights[i] = int(heights[i])
-    # fix last
-    remainder = h - sum(heights)
-    heights[0] += remainder
-
+    heights = randomDistribution(FONT_MIN_HEIGHT, FONT_MAX_HEIGHT,
+                                 LINES, DISPLAYHEIGHT)
     rowheights.append(heights)
     return
+
+def randomDistribution(minValue, maxValue, rangeValue, displaysizeparam):
+    randomList = [0]*rangeValue
+    s = 0
+    # random numbers
+    for i in range(rangeValue):
+        r = randint(minValue, maxValue)
+        # if excluded column:
+        if (rangeValue==CHARS_IN_LINE and i==EXCLUDECOLUMN):
+            r = minValue
+        s += r
+        randomList[i] = r
+    # scale
+    d = displaysizeparam
+    scale = d/s
+    for i in range(rangeValue):
+        randomList[i] *= scale
+        randomList[i] = int(randomList[i])
+    # fix last
+    remainder = d - sum(randomList)
+    randomList[0] += remainder
+    return randomList
 
 
 # MAIN FUNCTION
@@ -134,6 +130,7 @@ for frame in range(TOTALFRAMES):
         xOffset = SCREENWIDTH - MARGINS
         for c in range(CHARS_IN_LINE): # cols
             height = rowheights[c][l]
+            # print(colunmwidths)
             width = colunmwidths[c]
             xOffset -= width
             rect(xOffset, yOffset+accumulatedHeight[c], width, height)
