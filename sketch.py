@@ -40,6 +40,8 @@ maxLetterWidth = int(DISPLAYWIDTH * 0.4)
 minLetterHeight = int(DISPLAYHEIGHT* 0.1)
 maxLetterHeight = int(DISPLAYHEIGHT*0.8)
 
+
+
 FRAME_DURATION = TOTALDURATION / TOTALFRAMES
 
 # INITIALIZE VARIABLES
@@ -49,71 +51,37 @@ accumulatedHeight = [yOffset] * CHARS_IN_LINE # acc height per column
 widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
 
 # HELPER FUNCTIONS
-def newTxt():
-    t = FormattedString()
-    t.fill(255,255,255)
-    t.font(FONT)
-    t.fontSize(FONTSIZE)
-    t.openTypeFeatures(ss01=True)
-    t.align('right')
-    t.lineHeight(LINEHEIGHT)
-    t.tracking(0)
-    return t
 
-def mapWidthToFont(currentwidth):
-    return int(mapValue(currentwidth,
-                    minLetterWidth, maxLetterWidth,
-                    FONT_MIN_WIDTH, FONT_MAX_WIDTH))
+colunmwidths = [0]*CHARS_IN_LINE
+# rowheights = []*LINES
+shade = 0
 
-def mapHeightToFont(currentheight):
-    return int(mapValue(currentheight,
-                    minLetterHeight, maxLetterHeight,
-                    FONT_MIN_HEIGHT, FONT_MAX_HEIGHT))
-
-def mapValue(value, oldmin, oldmax, newmin, newmax):
-    return (value - oldmin) / (oldmax - oldmin) * (newmax - newmin) + newmin
-
-# LOGIC CORE FUNCTION
-def getVariableSettings(row, col):
-    global accumulatedHeight
-    global widthcontainer
-    accumulatedWidth = sum(widthcontainer) # LOCAL ????
-    variableWdth = minLetterWidth # init local
-    variableHght = minLetterHeight # init local
-    if (row==0):
-        # 1st row in charge of width definition for column
-        if (col==EXCLUDECOLUMN):
-            variableWdth = minLetterWidth
-        elif(col==CHARS_IN_LINE-1): # streach last letter width
-            variableWdth = max(DISPLAYWIDTH - accumulatedWidth, minLetterWidth)
-            print ("width",accumulatedWidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth))
-        else :
-            currentminwidth = minLetterWidth*(CHARS_IN_LINE-col-1)
-            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth - currentminwidth), currentminwidth) # min* how many letters left
-            variableWdth = randint(minLetterWidth, int(currentmaxwidth))
-            print ("width",accumulatedWidth, currentmaxwidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth- currentminwidth), currentminwidth)
-
-        # hold on to 1st row width values
-        widthcontainer[col] = variableWdth
-    else:
-        # other rows use the same width
-        variableWdth = widthcontainer[col]
-
-    # all rows need height settings
-    currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col]), minLetterHeight*(LINES-row))
-    variableHght = randint(minLetterHeight, int(currentmaxheight))
-    # print("height", currentmaxheight, variableHght, accumulatedHeight[col])
-
-    # streach last row height
-    if (row==LINES-1):
-        # TODO, max with minLetterHeight
-        currentheight = max(DISPLAYHEIGHT - accumulatedHeight[col],minLetterHeight)
-        variableHght = currentheight # RECT
-        # variableHght = mapHeightToFont(currentheight)
-
-    # print(variableWdth, variableHght)
-    return int(variableWdth), int(variableHght)
-
+def rowDistribution():
+# rand 6 num
+# sum them - s1
+# width - w
+# scale all by w/s1
+# sum of all will be w
+# why?
+# the probability is the diff
+# in the original logic the numbers are monotonic decreasing, the expectance is also decreasing
+# in this idea, the expected is k/2
+    s = 0
+    for i in range(CHARS_IN_LINE):
+        r = randint(FONT_MIN_WIDTH, FONT_MAX_WIDTH)
+        # r = randint(minLetterWidth, maxLetterWidth)
+        s += r
+        colunmwidths[i] = r
+    w = DISPLAYWIDTH
+    scale = w/s
+    for i in range(CHARS_IN_LINE):
+        # temp = colunmwidths[i]*scale
+        colunmwidths[i] *= scale
+        colunmwidths[i] = int(colunmwidths[i])
+    # fix last
+    remainder = w - sum(colunmwidths)
+    colunmwidths[0] += remainder
+    return
 
 # MAIN FUNCTION
 newDrawing() # needed for using as python module
@@ -122,26 +90,35 @@ for frame in range(TOTALFRAMES):
     newPage(SCREENWIDTH, SCREENHEIGHT)
     fill(BACKGROUND_R/255, BACKGROUND_G/255, BACKGROUND_B/255)
     rect(0,0,SCREENWIDTH, SCREENHEIGHT)
-    # fill(None) # TEST
-    # stroke(0)  # TEST
-    # rect(MARGINS, MARGINS, DISPLAYWIDTH, DISPLAYHEIGHT)  # TEST
     frameDuration(FRAME_DURATION)
-    for line in range(LINES):
-        xOffset = SCREENWIDTH - MARGINS # init for each line
-        for char in range(CHARS_IN_LINE):
-            w, h = getVariableSettings(line, char)
-            # yOffset = 10
-            yOffset = accumulatedHeight[char]
-            fill(None)
-            stroke(0)
-            xOffset -= w
-            # TODO max x and max y
-            rect(xOffset, yOffset, w, h)
-            # print("box", xOffset, yOffset, w, h)
 
-            # xOffset -= w
-            accumulatedHeight[char] += h
-# print(accumulatedHeight)
+    # # test min and max size of letters
+    # fill(0)
+    # rect(0,0, minLetterWidth,  minLetterHeight)
+    # rect(100,0, maxLetterWidth, maxLetterHeight)
+
+    for l in range(LINES):
+        rowDistribution()
+        xOffset = SCREENWIDTH - MARGINS
+
+        stroke(0)
+        fill(None)
+        # print(colunmwidths)
+        for i in range(CHARS_IN_LINE):
+            width = colunmwidths[i]
+            height = 100
+            xOffset -= width
+            rect(xOffset, yOffset, width, height)
+        yOffset +=100
+
+
+    # for line in range(LINES):
+    #     xOffset = SCREENWIDTH - MARGINS # init for each line
+    #     for char in range(CHARS_IN_LINE):
+    #         w, h = getVariableSettings(line, char)
+    #         fill(None)
+    #         stroke(0)
+    #         rect(xOffset, yOffset, w, h)
 
 
 # Save the animation as a gif
