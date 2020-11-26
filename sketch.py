@@ -88,9 +88,10 @@ def getVariableSettings(row, col):
             variableWdth = max(DISPLAYWIDTH - accumulatedWidth, minLetterWidth)
             print ("width",accumulatedWidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth))
         else :
-            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1)) # min* how many letters left
+            currentminwidth = minLetterWidth*(CHARS_IN_LINE-col-1)
+            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth - currentminwidth), currentminwidth) # min* how many letters left
             variableWdth = randint(minLetterWidth, int(currentmaxwidth))
-            print ("width",accumulatedWidth, currentmaxwidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1), CHARS_IN_LINE-col-1)
+            print ("width",accumulatedWidth, currentmaxwidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth- currentminwidth), currentminwidth)
 
         # hold on to 1st row width values
         widthcontainer[col] = variableWdth
