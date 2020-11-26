@@ -19,7 +19,8 @@ from drawBot import * # needed for using as python module
 
 # CONSTANTS:
 # DISPLAYTEXT = "מטבחים"
-DISPLAYTEXT = "מטבחים מטבחים מבטחים"
+DISPLAYTEXT = "מטבחום מטבחום מטבחום"
+# DISPLAYTEXT = "מטבחים מטבחים מבטחים"
 EXCLUDECOLUMN = 4
 FONTSIZE = 150
 FONT = 'assets/RAG-Marom-GX.ttf'
@@ -72,10 +73,14 @@ def randomDistribution(minValue, maxValue, rangeValue, displaysizeparam):
     for i in range(rangeValue):
         r = randint(minValue, maxValue)
         # if excluded column:
-        if (rangeValue==CHARS_IN_LINE and i==EXCLUDECOLUMN):
+        if (i==EXCLUDECOLUMN and rangeValue==CHARS_IN_LINE):
             r = minValue
+        # if (rangeValue==LINES): # how to access...
+        #     randomList[EXCLUDECOLUMN][i] = randomList[i-1]
+        #     print(r, randomList[i-1])
         s += r
         randomList[i] = r
+    # if(rangeValue==CHARS_IN_LINE): print(randomList)
     # scale
     d = displaysizeparam
     scale = d/s
@@ -83,8 +88,18 @@ def randomDistribution(minValue, maxValue, rangeValue, displaysizeparam):
         randomList[i] *= scale
         randomList[i] = int(randomList[i])
     # fix last
+    # if(rangeValue==CHARS_IN_LINE):
+        # print(randomList[EXCLUDECOLUMN])
+        # print( min(randomList))
+        # randomList[EXCLUDECOLUMN] = min(randomList)
+        # print(randomList[EXCLUDECOLUMN])
+
+    if(rangeValue==CHARS_IN_LINE): randomList[EXCLUDECOLUMN] -= 5
     remainder = d - sum(randomList)
+    print(sum(randomList), d, remainder)
     randomList[0] += remainder
+    # if(rangeValue==CHARS_IN_LINE): print(randomList)
+    # if(rangeValue==CHARS_IN_LINE):print(randomList[EXCLUDECOLUMN])
     return randomList
 
 def drawLetter(char, xLocation, yLocation, boxWidth, boxHeight):
@@ -99,12 +114,20 @@ def drawLetter(char, xLocation, yLocation, boxWidth, boxHeight):
     # calculate scaling factors
     factorHeight = (boxHeight - SPACEING) / letterHeight
     factorWidth  = (boxWidth - SPACEING)  / letterWidth
+
+    # if (char == "י"): ## TODO
+    #     shift = boxHeight-bottom
+    #     # yLocation -= bottom
+    #     factorHeight *= 0.6
+    # if (char=="ו"):
+    #     print(left, bottom, right, top)
     ## draw box
-    ## fill(1, 1, 0)
-    ## rect(xLocation, yLocation, boxWidth, boxHeight)
+    # fill(1, 1, 0)
+    # rect(xLocation, yLocation, boxWidth, boxHeight)
     # apply scaling factors
     B.scale(factorWidth, factorHeight)
     # shift shape to origin position
+
     B.translate(xLocation, yLocation)
     # draw scaled lettershape
     stroke(None)
@@ -135,6 +158,11 @@ for frame in range(TOTALFRAMES):
     for c in range(CHARS_IN_LINE):
         rowDistribution()
 
+    #test
+    # print(rowheights[EXCLUDECOLUMN])
+
+
+
     for l in range(LINES): # rows
         xOffset = SCREENWIDTH - MARGINS
         # xOffset = SCREENWIDTH - MARGINS
@@ -142,6 +170,11 @@ for frame in range(TOTALFRAMES):
             boxHeight = rowheights[c][l]
             boxWidth = colunmwidths[c]
             char = DISPLAYTEXTLIST[l][c]
+            # if (c==EXCLUDECOLUMN):
+            #     rect(xOffset, yOffset+accumulatedHeight[c],
+            #     boxWidth, boxHeight)
+            #     print(rowheights[EXCLUDECOLUMN], yOffset+accumulatedHeight[c],
+            #     boxWidth, boxHeight)
             drawLetter(char,
                        xOffset, yOffset+accumulatedHeight[c],
                        boxWidth, boxHeight)
