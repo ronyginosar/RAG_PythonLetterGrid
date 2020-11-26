@@ -3,7 +3,6 @@
 from drawBot import * # needed for using as python module
 
 # TODO's:
-# fill line width, mapping problem
 # animate transitions
 # NTH - make input text
 # NTH - interactive with mouse
@@ -14,11 +13,9 @@ from drawBot import * # needed for using as python module
 # width - w
 # scale all by w/s1
 # sum of all will be w
-# why?
-# the probability is the diff
+# why? the probability is the diff
 # in the original logic the numbers are monotonic decreasing, the expectance is also decreasing
 # in this idea, the expected is k/2
-
 
 # CONSTANTS:
 # DISPLAYTEXT = "מטבחים"
@@ -30,6 +27,7 @@ TOTALFRAMES = 1
 TOTALDURATION = 1 # in seconds
 BACKGROUND_R, BACKGROUND_G, BACKGROUND_B = 238, 127, 171
 MARGINS = 10
+SPACEING = 10
 
 # PRE PROCESSING - TEXT
 DISPLAYTEXTLIST = DISPLAYTEXT.split(' ')
@@ -46,20 +44,7 @@ LINEHEIGHT = FONTSIZE*0.7
 DISPLAYWIDTH, DISPLAYHEIGHT = 500, LINEHEIGHT*LINES
 SCREENWIDTH = DISPLAYWIDTH + MARGINS*2
 SCREENHEIGHT = DISPLAYHEIGHT + MARGINS*2
-# minLetterWidth = int(DISPLAYWIDTH * 0.1)
-# maxLetterWidth = int(DISPLAYWIDTH * 0.4)
-# minLetterHeight = int(DISPLAYHEIGHT* 0.1)
-# maxLetterHeight = int(DISPLAYHEIGHT*0.8)
-
-
-
 FRAME_DURATION = TOTALDURATION / TOTALFRAMES
-
-# INITIALIZE VARIABLES
-# xOffset = SCREENWIDTH - MARGINS # since we align right for hebrew
-yOffset = MARGINS
-# accumulatedHeight = [yOffset] * CHARS_IN_LINE # acc height per column
-# widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
 
 # HELPER FUNCTIONS
 colunmwidths = []
@@ -102,6 +87,29 @@ def randomDistribution(minValue, maxValue, rangeValue, displaysizeparam):
     randomList[0] += remainder
     return randomList
 
+def drawLetter(char, xLocation, yLocation, boxWidth, boxHeight):
+    # get lettershape as bezier
+    B = BezierPath()
+    B.text(char, (0, 0), fontSize=FONTSIZE, font=FONT, align="right")
+    # get lettershape bounding box
+    left, bottom, right, top = B.bounds()
+    # calculate lettershape width & height
+    letterWidth  = right - left
+    letterHeight = top - bottom
+    # calculate scaling factors
+    factorHeight = (boxHeight - SPACEING) / letterHeight
+    factorWidth  = (boxWidth - SPACEING)  / letterWidth
+    ## draw box
+    ## fill(1, 1, 0)
+    ## rect(xLocation, yLocation, boxWidth, boxHeight)
+    # apply scaling factors
+    B.scale(factorWidth, factorHeight)
+    # shift shape to origin position
+    B.translate(xLocation, yLocation)
+    # draw scaled lettershape
+    stroke(None)
+    fill(1, 1, 1)
+    drawPath(B)
 
 # MAIN FUNCTION
 newDrawing() # needed for using as python module
@@ -122,31 +130,24 @@ for frame in range(TOTALFRAMES):
     stroke(0)
     fill(None)
 
+    # run once the cols, *chars the rows
+    colDistribution()
     for c in range(CHARS_IN_LINE):
         rowDistribution()
 
-    colDistribution()
     for l in range(LINES): # rows
         xOffset = SCREENWIDTH - MARGINS
+        # xOffset = SCREENWIDTH - MARGINS
         for c in range(CHARS_IN_LINE): # cols
-            height = rowheights[c][l]
-            # print(colunmwidths)
-            width = colunmwidths[c]
-            xOffset -= width
-            rect(xOffset, yOffset+accumulatedHeight[c], width, height)
-            accumulatedHeight[c] += height
-
-
-
-
-    # for line in range(LINES):
-    #     xOffset = SCREENWIDTH - MARGINS # init for each line
-    #     for char in range(CHARS_IN_LINE):
-    #         w, h = getVariableSettings(line, char)
-    #         fill(None)
-    #         stroke(0)
-    #         rect(xOffset, yOffset, w, h)
-
+            boxHeight = rowheights[c][l]
+            boxWidth = colunmwidths[c]
+            char = DISPLAYTEXTLIST[l][c]
+            drawLetter(char,
+                       xOffset, yOffset+accumulatedHeight[c],
+                       boxWidth, boxHeight)
+            # rect(xOffset, yOffset+accumulatedHeight[c], width, height)
+            xOffset -= boxWidth
+            accumulatedHeight[c] += boxHeight
 
 # Save the animation as a gif
 path = "letterGrid.gif"
