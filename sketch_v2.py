@@ -11,8 +11,10 @@ from drawBot import * # needed for using as python module
 
 # CONSTANTS:
 # DISPLAYTEXT = "מטבחים"
+# DISPLAYTEXT = "hello"
+# DISPLAYTEXT = "מטבחים מערכות מבטחים"
 DISPLAYTEXT = "מטבחים מטבחים מבטחים"
-EXCLUDECOLUMN = 4
+EXCLUDECOLUMN = 4 # todo can we do this in the preprocessing?
 FONTSIZE = 150
 FONT = 'assets/RAG-Marom-GX.ttf'
 TOTALFRAMES = 1
@@ -36,7 +38,7 @@ DISPLAYWIDTH, DISPLAYHEIGHT = 500, LINEHEIGHT*LINES
 SCREENWIDTH = DISPLAYWIDTH + MARGINS*2
 SCREENHEIGHT = DISPLAYHEIGHT + MARGINS*2
 minLetterWidth = int(DISPLAYWIDTH * 0.1)
-maxLetterWidth = int(DISPLAYWIDTH * 0.4)
+maxLetterWidth = int(DISPLAYWIDTH * 0.5)
 minLetterHeight = int(DISPLAYHEIGHT* 0.1)
 maxLetterHeight = int(DISPLAYHEIGHT*0.8)
 
@@ -74,24 +76,27 @@ def mapValue(value, oldmin, oldmax, newmin, newmax):
     return (value - oldmin) / (oldmax - oldmin) * (newmax - newmin) + newmin
 
 # LOGIC CORE FUNCTION
-def getVariableSettings(row, col):
+def getVariableSettings(row, col): #, accumulatedWidth):
     global accumulatedHeight
     global widthcontainer
-    accumulatedWidth = sum(widthcontainer) # LOCAL ????
+    accumulatedWidth = widthcontainer[col-1]
     variableWdth = minLetterWidth # init local
     variableHght = minLetterHeight # init local
     if (row==0):
         # 1st row in charge of width definition for column
         if (col==EXCLUDECOLUMN):
-            variableWdth = minLetterWidth
-        elif(col==CHARS_IN_LINE-1): # streach last letter width
-            variableWdth = max(DISPLAYWIDTH - accumulatedWidth, minLetterWidth)
-            print ("width",accumulatedWidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth))
+            currentwidth = minLetterWidth
+            variableWdth = FONT_MIN_WIDTH
         else :
-            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1)) # min* how many letters left
-            variableWdth = randint(minLetterWidth, int(currentmaxwidth))
-            print ("width",accumulatedWidth, currentmaxwidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1), CHARS_IN_LINE-col-1)
-
+            # variableWdth regards letters before
+            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth)
+            currentwidth = randint(minLetterWidth, int(currentmaxwidth))
+            variableWdth = mapWidthToFont(currentwidth)
+            # streach last letter width
+            if (col==CHARS_IN_LINE-1):
+                currentwidth = DISPLAYWIDTH - accumulatedWidth
+                variableWdth = mapWidthToFont(currentwidth)
+                # print (accumulatedWidth, currentwidth, variableWdth, accumulatedWidth+currentwidth)
         # hold on to 1st row width values
         widthcontainer[col] = variableWdth
     else:
@@ -99,19 +104,17 @@ def getVariableSettings(row, col):
         variableWdth = widthcontainer[col]
 
     # all rows need height settings
-    currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col]), minLetterHeight*(LINES-row))
-    variableHght = randint(minLetterHeight, int(currentmaxheight))
-    # print("height", currentmaxheight, variableHght, accumulatedHeight[col])
+    currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col]), minLetterHeight)
+    currentheight = randint(minLetterHeight, int(currentmaxheight))
+    variableHght = mapHeightToFont(currentheight)
+    # print(currentmaxheight, currentheight, variableHght, accumulatedHeight[col])
 
     # streach last row height
     if (row==LINES-1):
-        # TODO, max with minLetterHeight
-        currentheight = max(DISPLAYHEIGHT - accumulatedHeight[col],minLetterHeight)
-        variableHght = currentheight # RECT
-        # variableHght = mapHeightToFont(currentheight)
+        currentheight = DISPLAYHEIGHT - accumulatedHeight[col]
+        variableHght = mapHeightToFont(currentheight)
 
-    # print(variableWdth, variableHght)
-    return int(variableWdth), int(variableHght)
+    return variableWdth, variableHght
 
 
 # MAIN FUNCTION
@@ -127,24 +130,45 @@ for frame in range(TOTALFRAMES):
     frameDuration(FRAME_DURATION)
     for line in range(LINES):
         xOffset = SCREENWIDTH - MARGINS # init for each line
-        for char in range(CHARS_IN_LINE):
-            w, h = getVariableSettings(line, char)
-            # yOffset = 10
-            yOffset = accumulatedHeight[char]
-            fill(None)
-            stroke(0)
-            xOffset -= w
-            # TODO max x and max y
-            rect(xOffset, yOffset, w, h)
-            # print("box", xOffset, yOffset, w, h)
 
-            # xOffset -= w
-            accumulatedHeight[char] += h
-# print(accumulatedHeight)
+        for char in range(CHARS_IN_LINE):
+            charTxt = newTxt()
+            # currentlinewidth = 50
+            # currentlinewidth = int(textSize(charTxt)[0])
+
+            # TEST:
+            # fill(None)
+            # stroke(50,0,0)
+            # rect(MARGINS, yOffset ,xOffset - MARGINS - currentlinewidth, charTxt.fontLineHeight())
+
+            variableWdth, variableHght = getVariableSettings(line, char)
+            charTxt.append(
+                DISPLAYTEXTLIST[line][char],
+                # create dict to replace original fontVariations - so instead of fontVariations(x)
+                fontVariations = dict(wdth = variableWdth, hght = variableHght)
+                )
+            # update accumilation
+            charWidth , charHeight = textSize(charTxt)
+            # charHeight = charTxt.fontXHeight()
+            # charHeight = charTxt.fontCapHeight()
+            print(int(charWidth) , int(charHeight))
+
+            # if (char == CHARS_IN_LINE-1):
+            #     print("wanted", DISPLAYWIDTH - currentlinewidth, "got", int(textSize(charTxt)[0])-currentlinewidth) #TEST
+            # print(currentlinewidth)Y
+
+            yOffset = accumulatedHeight[char]
+            text(charTxt, (xOffset, yOffset))
+
+            # update
+            # print(accumulatedHeight)
+            accumulatedHeight[char] += int(charHeight)
+            xOffset -= int(charWidth)
+
 
 
 # Save the animation as a gif
-path = "letterGrid.gif"
+path = "letterGrid2.gif"
 saveImage(path)  # or ~/Desktop/...
 
 endDrawing() # needed for using as python module

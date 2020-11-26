@@ -11,8 +11,10 @@ from drawBot import * # needed for using as python module
 
 # CONSTANTS:
 # DISPLAYTEXT = "מטבחים"
+# DISPLAYTEXT = "hello"
+# DISPLAYTEXT = "מטבחים מערכות מבטחים"
 DISPLAYTEXT = "מטבחים מטבחים מבטחים"
-EXCLUDECOLUMN = 4
+EXCLUDECOLUMN = 4 # todo can we do this in the preprocessing?
 FONTSIZE = 150
 FONT = 'assets/RAG-Marom-GX.ttf'
 TOTALFRAMES = 1
@@ -39,6 +41,7 @@ minLetterWidth = int(DISPLAYWIDTH * 0.1)
 maxLetterWidth = int(DISPLAYWIDTH * 0.4)
 minLetterHeight = int(DISPLAYHEIGHT* 0.1)
 maxLetterHeight = int(DISPLAYHEIGHT*0.8)
+# print("init", minLetterWidth,maxLetterWidth,minLetterHeight,maxLetterHeight)
 
 FRAME_DURATION = TOTALDURATION / TOTALFRAMES
 
@@ -47,6 +50,25 @@ xOffset = SCREENWIDTH - MARGINS # since we align right for hebrew
 yOffset = MARGINS
 accumulatedHeight = [yOffset] * CHARS_IN_LINE # acc height per column
 widthcontainer = [0] * CHARS_IN_LINE # tracking the 1st row widths to use
+
+# MORNING:
+# create shape "grid" that sums to 1.
+# each iter re-distribute
+# then draw letters.
+
+
+# idea!
+# rand 6 num.
+# sum them - s1
+# width - w
+# scale all by w/s1
+# sum of all will be w
+
+# the probability is the diff
+# in the current logic the numbers are monotonic decreasing, the expectance is decreasing
+# in this idea, the expected is k/2
+
+
 
 # HELPER FUNCTIONS
 def newTxt():
@@ -74,24 +96,35 @@ def mapValue(value, oldmin, oldmax, newmin, newmax):
     return (value - oldmin) / (oldmax - oldmin) * (newmax - newmin) + newmin
 
 # LOGIC CORE FUNCTION
-def getVariableSettings(row, col):
+def getVariableSettings(row, col): #, accumulatedWidth):
     global accumulatedHeight
     global widthcontainer
-    accumulatedWidth = sum(widthcontainer) # LOCAL ????
+    accumulatedWidth = sum(widthcontainer)
+    # print("acc", accumulatedWidth)
     variableWdth = minLetterWidth # init local
     variableHght = minLetterHeight # init local
     if (row==0):
         # 1st row in charge of width definition for column
         if (col==EXCLUDECOLUMN):
+            # currentwidth = minLetterWidth
             variableWdth = minLetterWidth
-        elif(col==CHARS_IN_LINE-1): # streach last letter width
-            variableWdth = max(DISPLAYWIDTH - accumulatedWidth, minLetterWidth)
-            print ("width",accumulatedWidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth))
+            # variableWdth = FONT_MIN_WIDTH
         else :
-            currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1)) # min* how many letters left
-            variableWdth = randint(minLetterWidth, int(currentmaxwidth))
-            print ("width",accumulatedWidth, currentmaxwidth, variableWdth, (DISPLAYWIDTH - accumulatedWidth)*0.4, minLetterWidth*(CHARS_IN_LINE-col-1), CHARS_IN_LINE-col-1)
+            # variableWdth regards letters before
+            # currentmaxwidth = max((DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth*(CHARS_IN_LINE-col)) # min* how many letters left
+            currentmaxwidth = max(DISPLAYWIDTH - accumulatedWidth - (minLetterWidth*(CHARS_IN_LINE-col))*0.5, 0)
+            currentwidth = randint(minLetterWidth, int(currentmaxwidth))
+            variableWdth = currentwidth # RECT
+            print (accumulatedWidth, currentwidth, (DISPLAYWIDTH - accumulatedWidth)*0.5, minLetterWidth*(CHARS_IN_LINE-col), CHARS_IN_LINE-col)
 
+            # variableWdth = mapWidthToFont(currentwidth)
+            # streach last letter width
+            if (col==CHARS_IN_LINE-1):
+                # TODO, max with minLetterWidth
+                currentwidth = max(DISPLAYWIDTH - accumulatedWidth, minLetterWidth)
+                variableWdth = currentwidth # RECT
+                # variableWdth = mapWidthToFont(currentwidth)
+                # print (accumulatedWidth, currentwidth, variableWdth, accumulatedWidth+currentwidth)
         # hold on to 1st row width values
         widthcontainer[col] = variableWdth
     else:
@@ -100,8 +133,11 @@ def getVariableSettings(row, col):
 
     # all rows need height settings
     currentmaxheight = max((DISPLAYHEIGHT - accumulatedHeight[col]), minLetterHeight*(LINES-row))
-    variableHght = randint(minLetterHeight, int(currentmaxheight))
-    # print("height", currentmaxheight, variableHght, accumulatedHeight[col])
+    currentheight = randint(minLetterHeight, int(currentmaxheight))
+    variableHght = currentheight # RECT
+    # variableHght = mapHeightToFont(currentheight)
+    # print(currentmaxheight, currentheight, variableHght, accumulatedHeight[col])
+
 
     # streach last row height
     if (row==LINES-1):
@@ -111,7 +147,7 @@ def getVariableSettings(row, col):
         # variableHght = mapHeightToFont(currentheight)
 
     # print(variableWdth, variableHght)
-    return int(variableWdth), int(variableHght)
+    return variableWdth, variableHght
 
 
 # MAIN FUNCTION
@@ -136,7 +172,7 @@ for frame in range(TOTALFRAMES):
             xOffset -= w
             # TODO max x and max y
             rect(xOffset, yOffset, w, h)
-            # print("box", xOffset, yOffset, w, h)
+            print(xOffset, yOffset, w, h)
 
             # xOffset -= w
             accumulatedHeight[char] += h
